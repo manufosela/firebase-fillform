@@ -3,8 +3,9 @@
 <link rel="import" href="bower_components/polymerfire/firebase-auth.html">
 <link rel="import" href="bower_components/polymerfire/firebase-document.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
-<link rel="import" href="bower_components/vaadin-text-field/vaadin-text-field.html">
+<link rel="import" href="bower_components/paper-input/paper-input.html">
 <link rel="import" href="bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="bower_components/iron-form/iron-form.html">
 
 <dom-module id="firebase-fillform">
   <template>
@@ -14,20 +15,29 @@
       }
       .error_msg { font-weight:bold; color:blue; padding:15px; }
       .path { color:green;}
-      paper-button {
+      #formfieldlayer { margin-bottom:30px; }
+      .inlineblock { display:inline-block; }
+      paper-button.login {
         background: green;
         color: yellow;
-        float: right
       }
-      paper-button:hover {
+      paper-button.login:hover {
         background: lime;
         color: green;
+      }
+      paper-button.save {
+        background: yellow;
+        color: blue;
+      }
+      paper-button.save:hover {
+        background: cyan;
+        color: yellow;
       }
       paper-button[disabled],
       paper-button[toggles][active] {
         background: red;
       }
-    </style>
+      </style>
     <firebase-app
       api-key="AIzaSyBTrSst4ygTZmVyYUHLBEZbCxPfe4ULwKw"
       auth-domain="kustomerdigitalmanagment.firebaseapp.com"
@@ -38,12 +48,13 @@
     </firebase-app>
     <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError"></firebase-auth>
     <firebase-document
-      path="{{path}}"
+      id="docfire"
       data="{{data}}">
     </firebase-document>
+    <div id="formfieldlayer"></div>
     <paper-button class="login" raised on-tap="login" hidden$="[[user]]">Sign in</paper-button>
     <paper-button class="login" raised on-tap="logout" hidden$="[[!user]]">Sign out</paper-button>
-    <div class="formfieldlayer"></div>
+    <paper-button class="save" raised hidden$="[[datauser]]">Save</paper-button>
   </template>
 
   <script>
@@ -58,72 +69,92 @@
             type: Object,
             observer:'_dataChange'
           },
-          user: Object
+          user: {
+            type: Object,
+            observer:'_userChange'
+          },
+          datauser: {
+            type: Boolean,
+            value: !!(this.user && this.data)
+          }
         };
       }
 
       _dataChange() {
         this._getFields(this.data[0]);
       }
+      _userChange(){
+        if (this.user && !this.$.docfire.path) {
+          this.$.docfire.path = this.path;
+        }
+      }
 
       _getFields(obj) {
-        if (obj===undefined && !this.root.querySelector('.error_msg')) {
-          this._showError();
-        } else {
-          this._cleanError();
-          for(var k in obj) {
-            if (typeof obj[k]==='object') {
-              if (Array.isArray(obj[k])) {
-                //console.log('key: '+k + ' type: Array'); console.log(obj[k]);
-                this._createCombo(k, obj[k]);
-              } else {
-                //console.log('key: '+k + ' type: ' + typeof obj[k]); console.log(obj[k]);
-                this._getFields(obj[k]);
-              }
-            }
-
-            if (typeof obj[k]==='string' || typeof obj[k]==='number') {
-              this._createField(k);
+        this._cleanError();
+        for(var k in obj) {
+          if (typeof obj[k]==='object') {
+            if (Array.isArray(obj[k])) {
+              //console.log('key: '+k + ' type: Array'); console.log(obj[k]);
+              var f = this._createCombo(k, obj[k]);
+              this.$.formfieldlayer.appendChild(f);
+            } else {
+              //console.log('key: '+k + ' type: ' + typeof obj[k]); console.log(obj[k]);
+              this._getFields(obj[k]);
             }
           }
-          this._sendButton();
+
+          if (typeof obj[k]==='string' || typeof obj[k]==='number') {
+            var f = this._createField(k);
+            this.$.formfieldlayer.appendChild(f);
+          }
         }
       }
 
-      _createField(k) {
-        if (!this.root.querySelector('#'+k)) {
-          var d = document.createElement('vaadin-text-field');
-          d.label=k;
-          d.id=k;
-          this.root.appendChild(d);
-        }
+      _createFormGroup(){
+        var c = document.createElement('div');
+        c.className='formGroup';
+        return c;
       }
-      _createCombo(k, arr){
-        if (!this.root.querySelector('#'+k)) {
-          var d = document.createElement('vaadin-combo-box');
-          d.label=k;
-          d.id=k;
-          window.addEventListener('WebComponentsReady', function() {
-            d.items = arr;
-          });
-          this.root.appendChild(d);
+
+      _createField(labelId, className) {
+        var c = this._createFormGroup();
+        if (!this.$['#'+labelId]) {
+          var d = document.createElement('paper-input');
+          d.label = labelId;
+          d.id = labelId;
+          if (className) { d.className = className; }
+          c.appendChild(d);
         }
+        return c;
       }
-      _sendButton(){
-        if (!this.root.querySelector('#sendBtn')) {
-          var d = document.createElement('paper-button');
-          d.id='sendBtn';
-          d.innerHTML='Save';
-          d.raised;
-          d.role='button';
-          this.root.appendChild(d);
+      _createCombo(labelId, arr){
+        var c = this._createFormGroup();
+        if (!this.$['#'+labelId]) {
+          var d = document.createElement('paper-input');
+          d.label = labelId;
+          d.id = labelId;
+          d.className = 'inlineblock';
+          c.appendChild(d);
         }
+        var e = document.createElement('button');
+        e.id = labelId + '_btn';
+        e.innerHTML='+';
+        c.appendChild(d);
+        c.appendChild(e);
+        return c;
       }
-      _showError(){
-        var d = document.createElement('div');
+      _showError(msg){
+        this.$.formfieldlayer.innerHTML = '';
+        var arrMsg = {
+          nopath: 'Path <span class="path">' + this.path + '</span> doesn\'t exists',
+          none: ''
+        }
+        var d = (!this.root.querySelector('.error_msg'))?document.createElement('div'):this.root.querySelector('.error_msg');
         d.className='error_msg';
-        d.innerHTML = 'Path <span class="path">' + this.path + '</span> doesn\'t exists';
-        this.root.appendChild(d);
+        d.innerHTML = arrMsg[msg];
+        if (!this.root.querySelector('.error_msg')) {
+          this.$.formfieldlayer.appendChild(d);
+        }
       }
       _cleanError(){
         var errmsg = this.root.querySelector('.error_msg');
@@ -139,11 +170,14 @@
       }
 
       signin() {
+        this.$.docfire.path = this.path;
         //console.log('logged');
         //console.log(this.data, this.path);
       }
 
       signout(){
+        this.$.docfire.path = null;
+        this._showError('none');
         //console.log('log out');
       }      
 
