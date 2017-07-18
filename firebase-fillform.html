@@ -4,8 +4,6 @@
 <link rel="import" href="bower_components/polymerfire/firebase-document.html">
 <link rel="import" href="bower_components/paper-button/paper-button.html">
 <link rel="import" href="bower_components/paper-input/paper-input.html">
-<link rel="import" href="bower_components/paper-dropdown-menu/paper-dropdown-menu.html">
-<link rel="import" href="bower_components/iron-form/iron-form.html">
 
 <dom-module id="firebase-fillform">
   <template>
@@ -38,14 +36,6 @@
         background: red;
       }
       </style>
-    <firebase-app
-      api-key="AIzaSyBTrSst4ygTZmVyYUHLBEZbCxPfe4ULwKw"
-      auth-domain="kustomerdigitalmanagment.firebaseapp.com"
-      database-url="https://kustomerdigitalmanagment.firebaseio.com"
-      project-id="kustomerdigitalmanagment"
-      storage-bucket="kustomerdigitalmanagment.appspot.com"
-      messaging-sender-id="948480016785">
-    </firebase-app>
     <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError"></firebase-auth>
     <firebase-document
       id="docfire"
@@ -54,7 +44,7 @@
     <div id="formfieldlayer"></div>
     <paper-button class="login" raised on-tap="login" hidden$="[[user]]">Sign in</paper-button>
     <paper-button class="login" raised on-tap="logout" hidden$="[[!user]]">Sign out</paper-button>
-    <paper-button class="save" raised hidden$="[[datauser]]">Save</paper-button>
+    <paper-button class="save" raised on-tap="save" hidden$="[[datauser]]">Save</paper-button>
   </template>
 
   <script>
@@ -76,6 +66,14 @@
           datauser: {
             type: Boolean,
             value: !!(this.user && this.data)
+          },
+          _counter: {
+            type: Array,
+            value: []
+          },
+          _arrKeys: {
+            type: Array,
+            value: []
           }
         };
       }
@@ -91,20 +89,14 @@
 
       _getFields(obj) {
         this._cleanError();
+        this._arrKeys = [];
         for(var k in obj) {
+          this._arrKeys.push(k);
           if (typeof obj[k]==='object') {
-            if (Array.isArray(obj[k])) {
-              //console.log('key: '+k + ' type: Array'); console.log(obj[k]);
-              var f = this._createCombo(k, obj[k]);
+              var f = this._createMF(k, typeof obj[k][0]);
               this.$.formfieldlayer.appendChild(f);
-            } else {
-              //console.log('key: '+k + ' type: ' + typeof obj[k]); console.log(obj[k]);
-              this._getFields(obj[k]);
-            }
-          }
-
-          if (typeof obj[k]==='string' || typeof obj[k]==='number') {
-            var f = this._createField(k);
+          } else if (typeof obj[k]==='string' || typeof obj[k]==='number') {
+            var f = this._createField(k, typeof obj[k]);
             this.$.formfieldlayer.appendChild(f);
           }
         }
@@ -116,32 +108,42 @@
         return c;
       }
 
-      _createField(labelId, className) {
+      _createField(labelId, typeobj) {
         var c = this._createFormGroup();
         if (!this.$['#'+labelId]) {
-          var d = document.createElement('paper-input');
-          d.label = labelId;
-          d.id = labelId;
-          if (className) { d.className = className; }
-          c.appendChild(d);
+          c.innerHTML='<paper-input label="'+labelId+'" id="'+labelId+'"><div slot="prefix">['+typeobj+']&nbsp;&nbsp;</div></paper-input>';
         }
         return c;
       }
-      _createCombo(labelId, arr){
+      _createMF(labelId, typeobj){
         var c = this._createFormGroup();
-        if (!this.$['#'+labelId]) {
-          var d = document.createElement('paper-input');
-          d.label = labelId;
-          d.id = labelId;
-          d.className = 'inlineblock';
-          c.appendChild(d);
-        }
+        this._createMultiField(c, labelId, typeobj);
+        return c;
+      }
+      _createMultiField(container, labelId, typeobj){
+        var c = this._createFormGroup();
+        this._counter[labelId] = (!this._counter[labelId])?0:this._counter[labelId]++;
+        let id = labelId + '_' + this._counter[labelId];
+        c.innerHTML = '<paper-input always-float-label label="'+labelId+'" id="'+id+'" class="inlineblock"><div slot="prefix">['+typeobj+']&nbsp;&nbsp;</paper-input>';
+
         var e = document.createElement('button');
         e.id = labelId + '_btn';
         e.innerHTML='+';
-        c.appendChild(d);
+        e.addEventListener('click', this._newMultiField.bind(this));
         c.appendChild(e);
-        return c;
+
+        container.appendChild(c);
+      }
+      _newMultiField(ev){
+        var labelId = ev.target.id.replace('_btn', '');
+        var container = ev.target.parentNode.parentNode;
+        this._counter[labelId]++;
+        var c = this._createFormGroup();
+        if (!this.$['#'+labelId]) {
+          let id = labelId + '_' + this._counter[labelId];
+          c.innerHTML = '<paper-input always-float-label label="'+labelId+'" id="'+id+'" class="inlineblock"></paper-input>';
+        }
+        container.appendChild(c);
       }
       _showError(msg){
         this.$.formfieldlayer.innerHTML = '';
@@ -159,6 +161,9 @@
       _cleanError(){
         var errmsg = this.root.querySelector('.error_msg');
         if (errmsg) { errmsg.remove(); }
+      }
+      _dataSaved(){
+        console.log('saved data in firebase');
       }
 
       login() {
@@ -180,6 +185,31 @@
         this._showError('none');
         //console.log('log out');
       }      
+
+      save(){
+        let data = {};
+        for(let i=0; i<this._arrKeys.length; i++) {
+          let el = this.root.querySelector('#'+this._arrKeys[i]);
+          if (el) {
+            let val = el.$.input.value;
+            data[this._arrKeys[i]]=val;
+            //console.log(this._arrKeys[i] + ' = ' + val);
+          } else {
+            let els = this.root.querySelectorAll('paper-input[id^=' + this._arrKeys[i] + '_]');
+            //console.log(this._arrKeys[i]);
+            data[this._arrKeys[i]]=[];
+            for(let j=0; j<els.length; j++) {
+              let el = els[j];
+              let val = els[j].$.input.value;
+              data[this._arrKeys[i]][j]=val;
+              //console.log('\t' + j + ' = ' + val);
+            }
+          }
+        }
+        console.dir(data);
+        //this.data[this.data.length] = data;        
+        this.root.querySelector('#docfire').ref.push(data, this._dataSaved);
+      }
 
     }
 
