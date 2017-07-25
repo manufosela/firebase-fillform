@@ -2,7 +2,7 @@ Form to fill firebase path
 
 # firebase-fillform [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/manufosela/firebase-fillform)
 
-Polymer component based in (LoLa (loading layer)) https://github.com/manufosela/LoLa
+https://github.com/manufosela/firebase-fillform
 
 # Use
 <firebase-fillform path="/firebase_path" api-key="firebase_api_key" domain="firebase_domain"></firebase-fillform>
