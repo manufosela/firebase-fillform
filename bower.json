@@ -8,7 +8,8 @@
     "paper-button": "^2.0.0",
     "paper-dropdown-menu": "https://github.com/PolymerElements/paper-dropdown-menu.git#^2.0.0",
     "iron-form": "polymerelements/iron-form#^2.0.0",
-    "paper-input": "polymer/paper-input#^0.5.6"
+    "paper-input": "polymerelements/paper-input#^2.0.1",
+    "paper-spinner": "polymerelements/paper-spinner#^2.0.0"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
@@ -23,6 +24,6 @@
     "paper-icon-button": "^1.0.5",
     "font-roboto": "^1.0.1",
     "iron-form": "^2.0.0",
-    "paper-input": "1 - 2"
+    "paper-input": "^2.0.1"
   }
 }
