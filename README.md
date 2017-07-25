@@ -1,22 +1,32 @@
-# \<firebase_fillform-element\>
-
 Form to fill firebase path
 
-## Install the Polymer-CLI
+# firebase-fillform [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/manufosela/firebase-fillform)
 
-First, make sure you have the [Polymer CLI](https://www.npmjs.com/package/polymer-cli) installed. Then run `polymer serve` to serve your element locally.
+Polymer component based in (LoLa (loading layer)) https://github.com/manufosela/LoLa
 
-## Viewing Your Element
+# Use
+<firebase-fillform path="/firebase_path" api-key="firebase_api_key" domain="firebase_domain"></firebase-fillform>
 
+Put the component in your polymer app.
+
+* **path** value of the path to get fields to fill
+* **api-key** value of the api-key of your firebase database
+* **domain** value of the domain of your firebase database.
+
+<!---
 ```
-$ polymer serve
+<custom-element-demo>
+  <template>
+    <script src="../webcomponentsjs/webcomponents-lite.js"></script>
+    <link rel="import" href="firebase-fillform.html">
+    <style>
+      html, body { height:500px; max-height:500px; min-height:500px; }
+    </style>
+    <next-code-block></next-code-block>
+  </template>
+</custom-element-demo>
 ```
-
-## Running Tests
-
+-->
+```html
+<firebase-fillform path="/candidatos" api-key="AIzaSyBZBEvTJmRwVorU7a5V4PZR6QXCkrx7tdM" domain="karteradekontratacion"></firebase-fillform>
 ```
-$ polymer test
-```
-
-Your application is already set up to be tested via [web-component-tester](https://github.com/Polymer/web-component-tester). Run `polymer test` to run your application's test suite locally.
-# firebase-fillform
