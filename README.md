@@ -1,6 +1,19 @@
-Form to fill firebase path
-
 # firebase-fillform [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/manufosela/firebase-fillform)
+
+Form to fill firebase path. 
+
+Is mandatory it exists in the path at least one entry. The component uses the first entry in the path to get the fields and generate the form.
+Works with an array of objects with a level of deep. The fields can be simple fields or arrays.
+For example:
+
+"candidatos" : [ {
+    "cliente_potencial" : [ "Cliente1" ],
+    "edad" : 46,
+    "nivel_ingles" : "A2",
+    "nombre" : "prueba",
+    "perfil" : [ "FrontEnd" ]
+  }
+]
 
 https://github.com/manufosela/firebase-fillform
 
