@@ -6,11 +6,16 @@
     "polymer": "Polymer/polymer#^2.0.0",
     "polymerfire": "^2.1.0",
     "paper-button": "^2.0.0",
-    "paper-dropdown-menu": "https://github.com/PolymerElements/paper-dropdown-menu.git#^2.0.0",
+    "paper-dropdown-menu": "polymerelements/paper-dropdown-menu#^2.0.0",
     "iron-form": "polymerelements/iron-form#^2.0.0",
     "paper-input": "polymerelements/paper-input#^2.0.1",
     "paper-spinner": "polymerelements/paper-spinner#^2.0.0",
-    "paper-dialog": "polymerelements/paper-dialog#^2.0.0"
+    "paper-dialog": "polymerelements/paper-dialog#^2.0.0",
+    "paper-item": "polymerelements/paper-item#^2.0.0",
+    "paper-listbox": "polymerelements/paper-listbox#^2.0.0",
+    "neon-animation": "polymerelements/neon-animation#^2.0.1",
+    "paper-dialog-scrollable": "polymerelements/paper-dialog-scrollable#^2.1.0",
+    "web-animations-js": "web-animations/web-animations-js#^2.3.1"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",

@@ -2,10 +2,15 @@
 <link rel="import" href="../polymerfire/firebase-app.html">
 <link rel="import" href="../polymerfire/firebase-auth.html">
 <link rel="import" href="../polymerfire/firebase-document.html">
+<link rel="import" href="../neon-animation/web-animations.html">
 <link rel="import" href="../paper-button/paper-button.html">
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../paper-spinner/paper-spinner.html">
 <link rel="import" href="../paper-dialog/paper-dialog.html">
+<link rel="import" href="../paper-item/paper-item.html">
+<link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
+<link rel="import" href="../paper-listbox/paper-listbox.html">
+
 
 <dom-module id="firebase-fillform">
   <template>
@@ -27,7 +32,7 @@
         color: blue;
       }
       paper-button.register:hover {
-        background: #CCC;
+        background: #CCC;paper-menu-button-animations.html
         color: cyan;
       }
       paper-button.login {
@@ -50,6 +55,18 @@
       paper-button[toggles][active] {
         background: red;
       }
+      .fadeIn {  
+        animation-play-state: running;
+        animation: fadeIn 500ms linear 0s 1 normal forwards; /* Modern browsers */
+      }
+      .fadeOut {
+        animation-play-state: running;
+        animation: fadeOut 150ms linear 0s 1 normal forwards; /* Modern browsers */
+      }
+
+      /* IE 10 / Chrome */
+      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     </style>
     <firebase-app
       api-key="{{apiKey}}"
@@ -117,6 +134,10 @@
             type: Array,
             value: []
           },
+          _parentKeys: {
+            type: Array,
+            value: []
+          },
           apiKey: String,
           domain: String
         };
@@ -124,15 +145,18 @@
 
       _dataChange() {
         if (this.data[0]) {
-          this._getFields(this.data[0]);
-          this.$.spinner.active = false;
+          var getParentKeys = new Promise( (resolve, reject) => {
+            this._getParentKeys(resolve);
+          });
+          getParentKeys.then(()=>{
+            this._getFields(this.data[0]);
+            this.$.spinner.active = false;
+          });
         }
       }
       _userChange(){
         if (this.user && !this.$.docfire.path) {
           this.$.docfire.path = this.path;
-        } else {
-          //this.$.spinner.active = false;
         }
       }
 
@@ -141,13 +165,17 @@
         this._arrKeys = [];
         for(var k in obj) {
           this._arrKeys.push(k);
-          if (typeof obj[k]==='object') {
-              var f = this._createMF(k, typeof obj[k][0]);
-              this.$.formfieldlayer.appendChild(f);
+          console.log(k, this._parentKeys.indexOf(k));
+          if (!!~this._parentKeys.indexOf(k)) {
+            var f = this._createFormGroup();
+            this._createList(k, f);
+          } else if (typeof obj[k]==='object') {
+            var f = this._createMF(k, typeof obj[k][0]);
           } else if (typeof obj[k]==='string' || typeof obj[k]==='number') {
             var f = this._createField(k, typeof obj[k]);
-            this.$.formfieldlayer.appendChild(f);
           }
+          if (f)
+          this.$.formfieldlayer.appendChild(f);
         }
       }
 
@@ -182,7 +210,6 @@
         e.setAttribute('typeobj', typeobj);
         e.addEventListener('click', this._newMultiField.bind(this));
         c.appendChild(e);
-
         container.appendChild(c);
       }
       _newMultiField(ev, o){
@@ -196,6 +223,44 @@
           c.innerHTML = '<paper-input type="'+typeobj+'" label="'+labelId+'" id="'+id+'" class="inlineblock"><div class="slot" slot="prefix">['+typeobj+']</div><div class="slot" slot="suffix">'+this._counter[labelId]+'</div></paper-input>';
         }
         container.appendChild(c);
+      }
+      _createList(labelId, formgroup) {
+        var ref = firebase.database().ref("/"+labelId);
+        var paperDropdownMenu = document.createElement('paper-dropdown-menu');
+        paperDropdownMenu.id = labelId;
+        paperDropdownMenu.label = labelId;
+        var paperListbox = document.createElement('paper-listbox');
+        paperListbox.slot = 'dropdown-content';
+        paperListbox.className = 'dropdown-content';
+        ref.once("value")
+          .then(function(snap) {
+            snap.forEach(function(item) {
+              var itemVal = item.val();
+              var paperItem = document.createElement('paper-item');
+              paperItem.innerHTML = itemVal;
+              paperListbox.appendChild(paperItem);
+            });
+            if (!this.$['#'+labelId]) {
+              paperDropdownMenu.appendChild(paperListbox);
+              formgroup.appendChild(paperDropdownMenu);
+            }
+          }.bind(this));
+        
+        /* CON INNERHTML
+
+        var listValues = '<paper-dropdown-menu id="' + labelId + '" label="' + labelId + '" ><paper-listbox slot="dropdown-content" class="dropdown-content">';
+        ref.once("value")
+          .then(function(snap) {
+            snap.forEach(function(item) {
+              var itemVal = item.val();
+              listValues += '<paper-item>' + itemVal + '</paper-item>';
+            });
+            listValues += ' </paper-listbox></paper-dropdown-menu>';
+            if (!this.$['#'+labelId]) {
+              formgroup.innerHTML=listValues;
+            }
+          }.bind(this));
+        // */
       }
       _showError(msg){
         this.$.formfieldlayer.innerHTML = '';
@@ -214,6 +279,9 @@
         this.$.formfieldlayer.querySelectorAll('paper-input').forEach(function(element) {
           element.value='';
         }, this);
+        this.$.formfieldlayer.querySelectorAll('paper-dropdown-menu').forEach(function(element) {
+          element.root.querySelector('paper-menu-button .dropdown-trigger paper-input').root.querySelector('iron-input input').value = "";
+        }, this);
       }
       _cleanError(){
         var errmsg = this.root.querySelector('.error_msg');
@@ -226,6 +294,22 @@
           this.$.mensaje_popup.toggle(); 
           if (callback) { callback(); }
         }, 2000);
+      }
+      _getParentKeys(resolve, reject){
+        var ref = firebase.database().ref("/");
+        var keys = [];
+        var counts = [];
+        ref.once("value")
+          .then(function(snap) {
+            snap.forEach(function(item) {
+              var itemVal = item.val();
+              var itemKey = item.key;
+              keys.push(itemKey);
+          });
+          resolve();
+          console.log(keys);  
+        });
+        this.set('_parentKeys', keys);
       }
 
       register_popup() {
@@ -275,7 +359,7 @@
         for(let i=0; i<this._arrKeys.length; i++) {
           let el = this.root.querySelector('#'+this._arrKeys[i]);
           if (el) {
-            let val = el.$.input.value;
+            let val = (el.$.input) ? el.$.input.value : el.selectedItem.textContent;
             if (val) {
               data[this._arrKeys[i]]=val;
             }
