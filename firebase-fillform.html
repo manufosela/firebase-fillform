@@ -55,18 +55,6 @@
       paper-button[toggles][active] {
         background: red;
       }
-      .fadeIn {  
-        animation-play-state: running;
-        animation: fadeIn 500ms linear 0s 1 normal forwards; /* Modern browsers */
-      }
-      .fadeOut {
-        animation-play-state: running;
-        animation: fadeOut 150ms linear 0s 1 normal forwards; /* Modern browsers */
-      }
-
-      /* IE 10 / Chrome */
-      @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
     </style>
     <firebase-app
       api-key="{{apiKey}}"
@@ -165,17 +153,25 @@
         this._arrKeys = [];
         for(var k in obj) {
           this._arrKeys.push(k);
-          console.log(k, this._parentKeys.indexOf(k));
-          if (!!~this._parentKeys.indexOf(k)) {
+          //console.log(k, this._parentKeys.indexOf(k));
+          if (typeof obj[k]==='object' && !!~this._parentKeys.indexOf(k)) {
+            console.log('multifield multiple ' + k);
+            var f = this._createFormGroup();
+            this._createListMult(k, f);
+          } else if (!!~this._parentKeys.indexOf(k)) { 
             var f = this._createFormGroup();
             this._createList(k, f);
+            console.log('list ' + k);
           } else if (typeof obj[k]==='object') {
             var f = this._createMF(k, typeof obj[k][0]);
+            console.log('Multifield ' + k);
           } else if (typeof obj[k]==='string' || typeof obj[k]==='number') {
             var f = this._createField(k, typeof obj[k]);
+            console.log('input ' + k);
           }
-          if (f)
-          this.$.formfieldlayer.appendChild(f);
+          if (f) {
+            this.$.formfieldlayer.appendChild(f);
+          }
         }
       }
 
@@ -205,7 +201,7 @@
         c.innerHTML = '<paper-input type="'+typeobj+'" label="'+labelId+'" id="'+id+'" class="inlineblock"><div class="slot" slot="prefix">['+typeobj+']</div><div class="slot" slot="suffix">'+this._counter[labelId]+'</div></paper-input>';
 
         var e = document.createElement('button');
-        e.id = labelId + '_btn';
+        e.id = 'btn_' + id;
         e.innerHTML='+';
         e.setAttribute('typeobj', typeobj);
         e.addEventListener('click', this._newMultiField.bind(this));
@@ -213,7 +209,8 @@
         container.appendChild(c);
       }
       _newMultiField(ev, o){
-        var labelId = ev.target.id.replace('_btn', '');
+        var labelId = ev.target.id.replace(/^btn_/, '');
+        labelId = labelId.replace(/_\d*$/, '');
         var container = ev.target.parentNode.parentNode;
         var typeobj = ev.target.getAttribute('typeobj');
         this._counter[labelId]++;
@@ -224,6 +221,70 @@
         }
         container.appendChild(c);
       }
+      _createListMult(labelId, formGroup) {
+        this._counter[labelId] = (!this._counter[labelId])?0:this._counter[labelId]++;
+        var id = labelId + '_' + this._counter[labelId];
+        var ref = firebase.database().ref("/"+labelId);
+        var paperDropdownMenu = document.createElement('paper-dropdown-menu');
+        paperDropdownMenu.id = id;
+        paperDropdownMenu.label = labelId;
+        var paperListbox = document.createElement('paper-listbox');
+        paperListbox.slot = 'dropdown-content';
+        paperListbox.className = 'dropdown-content';
+        var container = this._createFormGroup();
+        ref.once("value")
+          .then(function(snap) {
+            snap.forEach(function(item) {
+              var itemVal = item.val();
+              var paperItem = document.createElement('paper-item');
+              paperItem.innerHTML = itemVal;
+              paperListbox.appendChild(paperItem);
+            });
+            if (!this.$['#'+labelId]) {
+              paperDropdownMenu.appendChild(paperListbox);
+              this._counter[labelId] = (!this._counter[labelId])?0:this._counter[labelId]++;
+              var e = document.createElement('button');
+              e.id = 'btn_' + id;
+              e.innerHTML='+';
+              e.addEventListener('click', this._newListMult.bind(this));
+              container.appendChild(paperDropdownMenu);
+              container.appendChild(e);
+              formGroup.appendChild(container);
+            }
+          }.bind(this));
+      }
+      _newListMult(ev, o){
+        var labelId = ev.target.id.replace(/^btn_/, '');
+        labelId = labelId.replace(/_\d*$/, '');
+        var formGroup = ev.target.parentNode.parentNode;
+        this._counter[labelId]++;
+        var id = labelId + '_' + this._counter[labelId];
+        var ref = firebase.database().ref("/"+labelId);
+        var paperDropdownMenu = document.createElement('paper-dropdown-menu');
+        paperDropdownMenu.id = id;
+        paperDropdownMenu.label = labelId;
+        var paperListbox = document.createElement('paper-listbox');
+        paperListbox.slot = 'dropdown-content';
+        paperListbox.className = 'dropdown-content';
+        var container = this._createFormGroup();
+        ref.once("value")
+          .then(function(snap) {
+            snap.forEach(function(item) {
+              var itemVal = item.val();
+              var paperItem = document.createElement('paper-item');
+              paperItem.innerHTML = itemVal;
+              paperListbox.appendChild(paperItem);
+            });
+            if (!this.$['#'+labelId]) {
+              paperDropdownMenu.appendChild(paperListbox);
+              var c = this._createFormGroup();
+              this._counter[labelId] = (!this._counter[labelId])?0:this._counter[labelId]++;
+              container.appendChild(paperDropdownMenu);
+              formGroup.appendChild(container);
+            }
+          }.bind(this));
+      }
+
       _createList(labelId, formgroup) {
         var ref = firebase.database().ref("/"+labelId);
         var paperDropdownMenu = document.createElement('paper-dropdown-menu');
@@ -245,23 +306,12 @@
               formgroup.appendChild(paperDropdownMenu);
             }
           }.bind(this));
-        
-        /* CON INNERHTML
-
-        var listValues = '<paper-dropdown-menu id="' + labelId + '" label="' + labelId + '" ><paper-listbox slot="dropdown-content" class="dropdown-content">';
-        ref.once("value")
-          .then(function(snap) {
-            snap.forEach(function(item) {
-              var itemVal = item.val();
-              listValues += '<paper-item>' + itemVal + '</paper-item>';
-            });
-            listValues += ' </paper-listbox></paper-dropdown-menu>';
-            if (!this.$['#'+labelId]) {
-              formgroup.innerHTML=listValues;
-            }
-          }.bind(this));
-        // */
       }
+
+      _createListMS(labelId, formGroup){
+        // <paper-dropdown-menu-multi label="Names" selections="[&quot;Sarah&quot;,&quot;Tessa&quot;,&quot;Hitaru&quot;]" maxdisplay="3"></paper-dropdown-menu-multi>
+      }
+
       _showError(msg){
         this.$.formfieldlayer.innerHTML = '';
         var arrMsg = {
@@ -365,12 +415,12 @@
             }
             //console.log(this._arrKeys[i] + ' = ' + val);
           } else {
-            let els = this.root.querySelectorAll('paper-input[id^=' + this._arrKeys[i] + '_]');
+            let els = this.root.querySelectorAll('[id^=' + this._arrKeys[i] + '_]');
             //console.log(this._arrKeys[i]);
             data[this._arrKeys[i]]=[];
             for(let j=0; j<els.length; j++) {
               let el = els[j];
-              let val = els[j].$.input.value;
+              let val = (el.$.input) ? el.$.input.value : el.selectedItem.textContent;
               if(val) {
                 data[this._arrKeys[i]][j]=val;
               }
@@ -379,8 +429,10 @@
             if (data[this._arrKeys[i]].length===0) { delete data[this._arrKeys[i]]; }
           }
         }
-        if (Object.keys(data).length !== 0) {       
-          this.set('data.'+Object.keys(this.data).length, data);
+        if (Object.keys(data).length !== 0) {
+          let nextId = parseInt(Object.keys(this.data).pop())+1;
+          this.set('data.'+nextId, data);
+          console.log(nextId); console.dir(data);
           this._showMsgPopup('Datos guardados correctamente', this._cleanFields.bind(this));
         }
       }
