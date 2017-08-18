@@ -1,19 +1,45 @@
 # firebase-fillform [![Published on webcomponents.org](https://img.shields.io/badge/webcomponents.org-published-blue.svg)](https://www.webcomponents.org/element/manufosela/firebase-fillform)
 
-Form to fill firebase path. 
+It generate a form based in a firebase path to fill it easyly.
 
-Is mandatory it exists in the path at least one entry. The component uses the first entry in the path to get the fields and generate the form.
-Works with an array of objects with a level of deep. The fields can be simple fields or arrays.
+Works with an array of objects with a level of deep. 
+
+The fields can be simple fields or arrays.
+
+For example: 
+```json
+{
+  "movies" : [ {
+    "classification" : ["science fiction", "adventure" ],
+    "colección" : "Star Wars",
+    "director" : "George Lucas",
+    "formato" : "blue-ray",
+    "titulo" : "The Phantom Menace",
+    "valoracion" : 10
+   } ]
+ }
+```
+
+Is mandatory it exists in the path at least one entry because **The component uses the first entry in the path to get the fields and generate the form.**
+
+You can use a firebase path to show a select option in a field. To do this the firebase path must have the same name of the field.
+
 For example:
+```json
+{
+  "classification" : [ "science fiction", "adventure", "drama", "comedy", "horror", "psychological thriller", "crime", "romantic", "historical" ],
+  "movies" : [ {
+    "classification" : ["science fiction", "adventure" ],
+    "colección" : "Star Wars",
+    "director" : "George Lucas",
+    "formato" : "blue-ray",
+    "titulo" : "The Phantom Menace",
+    "valoracion" : 10
+   } ]
+ }
+```
 
-"candidatos" : [ {
-    "cliente_potencial" : [ "Cliente1" ],
-    "edad" : 46,
-    "nivel_ingles" : "A2",
-    "nombre" : "prueba",
-    "perfil" : [ "FrontEnd" ]
-  }
-]
+Now the *clasification* field it is not a free field, it is shown like a select with the list values.
 
 https://github.com/manufosela/firebase-fillform
 
@@ -25,6 +51,10 @@ Put the component in your polymer app.
 * **path** value of the path to get fields to fill
 * **api-key** value of the api-key of your firebase database
 * **domain** value of the domain of your firebase database.
+
+Configure Firebase:
+* Enable google login method authentication
+* Add a domain if necessary
 
 <!---
 ```
