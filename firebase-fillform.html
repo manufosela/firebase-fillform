@@ -11,7 +11,6 @@
 <link rel="import" href="../paper-dropdown-menu/paper-dropdown-menu.html">
 <link rel="import" href="../paper-listbox/paper-listbox.html">
 
-
 <dom-module id="firebase-fillform">
   <template>
      <style>
@@ -32,7 +31,7 @@
         color: blue;
       }
       paper-button.register:hover {
-        background: #CCC;paper-menu-button-animations.html
+        background: #CCC;
         color: cyan;
       }
       paper-button.login {
@@ -74,7 +73,8 @@
     <!--<paper-button class="register" raised on-tap="register_popup" hidden$="[[user]]">Register</paper-button>-->
     <paper-button class="login" raised on-tap="login" hidden$="[[user]]">Sign in</paper-button>
     <paper-button class="login" raised on-tap="logout" hidden$="[[!user]]">Sign out</paper-button>
-    <paper-button class="save" raised on-tap="save" hidden$="[[datauser]]">Save</paper-button>
+    <paper-button class="save" raised on-tap="save" hidden$="[[hiddenComplex]]">Save</paper-button>
+    <paper-button class="save" raised on-tap="savesimple" hidden$="[[hiddenSimple]]">Save</paper-button>
     
 
     <paper-dialog id="mensaje_popup">
@@ -108,7 +108,19 @@
           },
           datauser: {
             type: Boolean,
-            value: !!(this.user && this.data)
+            computed: '_dataUser(user, data)'
+          },
+          hiddenSimple:{
+            type: Boolean,
+            computed: '_hiddenSimple(datauser,_simple)'
+          },
+          hiddenComplex:{
+            type: Boolean,
+            computed: '_hiddenComplex(datauser,_simple)'
+          },
+          _simple:{
+            type: Boolean,
+            value: false
           },
           signInType: {
             type:String,
@@ -131,10 +143,31 @@
         };
       }
 
+      _dataUser(user, data) {
+        return !!(user && data);
+      }
+      _hiddenSimple(datauser, simple){
+        return !!(datauser && !simple);
+      }
+      _hiddenComplex(datauser, simple){
+        return !!(datauser && simple);
+      }
+
       _dataChange() {
         if (this.data[0]) {
           var getParentKeys = new Promise( (resolve, reject) => {
-            this._getParentKeys(resolve);
+            if (typeof this.data[0] === 'object') {
+              this._simple = false;
+              this._getParentKeys(resolve);
+            } else {
+              this._simple = true;
+              this._cleanError();
+              let k = [this.path.replace('/','')];
+              this.$.spinner.active = false;
+              var f = this._createField(k, typeof this.data[0]);
+              this.$.formfieldlayer.appendChild(f);
+              console.log('input ' + k);
+            }
           });
           getParentKeys.then(()=>{
             this._getFields(this.data[0]);
@@ -403,6 +436,17 @@
         this._showError('none');
         //console.log('log out');
       }      
+
+      savesimple(){
+        let el = this.root.querySelector('#'+this.path.replace('/',''));
+        let val = el.$.input.value;
+        if (val) {
+          let nextId = parseInt(Object.keys(this.data).pop())+1;
+          this.set('data.'+nextId, val);
+          console.log(nextId); console.dir(val);
+          this._showMsgPopup('Datos guardados correctamente', this._cleanFields.bind(this));
+        }
+      }
 
       save(){
         let data = {};
