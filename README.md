@@ -52,6 +52,8 @@ Put the component in your polymer app.
 * **api-key** value of the api-key of your firebase database
 * **domain** value of the domain of your firebase database.
 
+**IMPORTANT:** If use 2 or more *firebase-fillform* components in the same page, only define path and api-key in the first component to avoid conflicts and firebase-app object redefinition.
+
 Configure Firebase:
 * Enable google login method authentication
 * Add a domain if necessary
