@@ -73,5 +73,11 @@ Configure Firebase:
 ```
 -->
 ```html
-<firebase-fillform path="/candidatos" api-key="AIzaSyBZBEvTJmRwVorU7a5V4PZR6QXCkrx7tdM" domain="karteradekontratacion"></firebase-fillform>
+
+<h3>Basic firebase-fillform demo</h3>
+<h4>Simple</h4>
+<firebase-fillform name='simple-example' path="/clasificacion" api-key="AIzaSyBaehmgaklz_vaqsBVZhvBm0fsD7PF8PHQ" domain="coleccion-peliculas"></firebase-fillform>
+<h3>Complex</h3>
+<firebase-fillform name='complex-example' path="/peliculas" debug="true"></firebase-fillform>
+</div>
 ```
