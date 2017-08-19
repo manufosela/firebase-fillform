@@ -55,6 +55,8 @@
         background: red;
       }
     </style>
+    
+    
     <firebase-app
       api-key="{{apiKey}}"
       auth-domain="{{domain}}.firebaseapp.com"
@@ -62,6 +64,7 @@
       project-id="{{domain}}"
       storage-bucket="{{domain}}.appspot.com">
     </firebase-app>
+    
     <firebase-auth id="auth" user="{{user}}" provider="google" on-error="handleError"></firebase-auth>
     <firebase-document
       id="docfire"
@@ -73,9 +76,7 @@
     <!--<paper-button class="register" raised on-tap="register_popup" hidden$="[[user]]">Register</paper-button>-->
     <paper-button class="login" raised on-tap="login" hidden$="[[user]]">Sign in</paper-button>
     <paper-button class="login" raised on-tap="logout" hidden$="[[!user]]">Sign out</paper-button>
-    <paper-button class="save" raised on-tap="save" hidden$="[[hiddenComplex]]">Save</paper-button>
-    <paper-button class="save" raised on-tap="savesimple" hidden$="[[hiddenSimple]]">Save</paper-button>
-    
+    <paper-button class="save" raised on-tap="save" hidden$="[[datauser]]">Save</paper-button>
 
     <paper-dialog id="mensaje_popup">
     </paper-dialog>
@@ -110,18 +111,6 @@
             type: Boolean,
             computed: '_dataUser(user, data)'
           },
-          hiddenSimple:{
-            type: Boolean,
-            computed: '_hiddenSimple(datauser,_simple)'
-          },
-          hiddenComplex:{
-            type: Boolean,
-            computed: '_hiddenComplex(datauser,_simple)'
-          },
-          _simple:{
-            type: Boolean,
-            value: false
-          },
           signInType: {
             type:String,
             value:'signInWithPopup'
@@ -139,20 +128,26 @@
             value: []
           },
           apiKey: String,
-          domain: String
+          domain: String,
+          log: {
+            type: Object,
+            computed: '_log(debug)'
+          },
+          debug:{
+            type: Boolean,
+            value: false
+          }
         };
       }
 
+      _log(debug){
+        return (debug)?console.log:function(){};
+      }
       _dataUser(user, data) {
-        return !!(user && data);
+        this.log('user && data', !(user && data));
+        return !(user && data);
       }
-      _hiddenSimple(datauser, simple){
-        return !!(datauser && !simple);
-      }
-      _hiddenComplex(datauser, simple){
-        return !!(datauser && simple);
-      }
-
+      
       _dataChange() {
         if (this.data[0]) {
           var getParentKeys = new Promise( (resolve, reject) => {
@@ -166,7 +161,6 @@
               this.$.spinner.active = false;
               var f = this._createField(k, typeof this.data[0]);
               this.$.formfieldlayer.appendChild(f);
-              console.log('input ' + k);
             }
           });
           getParentKeys.then(()=>{
@@ -186,21 +180,20 @@
         this._arrKeys = [];
         for(var k in obj) {
           this._arrKeys.push(k);
-          //console.log(k, this._parentKeys.indexOf(k));
           if (typeof obj[k]==='object' && !!~this._parentKeys.indexOf(k)) {
-            console.log('multifield multiple ' + k);
+            this.log('multifield multiple ' + k);
             var f = this._createFormGroup();
             this._createListMult(k, f);
           } else if (!!~this._parentKeys.indexOf(k)) { 
             var f = this._createFormGroup();
             this._createList(k, f);
-            console.log('list ' + k);
+            this.log('list ' + k);
           } else if (typeof obj[k]==='object') {
             var f = this._createMF(k, typeof obj[k][0]);
-            console.log('Multifield ' + k);
+            this.log('Multifield ' + k);
           } else if (typeof obj[k]==='string' || typeof obj[k]==='number') {
             var f = this._createField(k, typeof obj[k]);
-            console.log('input ' + k);
+            this.log('input ' + k);
           }
           if (f) {
             this.$.formfieldlayer.appendChild(f);
@@ -390,11 +383,12 @@
               keys.push(itemKey);
           });
           resolve();
-          console.log(keys);  
-        });
-        this.set('_parentKeys', keys);
+          this.log('keys with entry', keys);  
+          this.set('_parentKeys', keys);
+        }.bind(this));
       }
-
+      
+      /*
       register_popup() {
         this.$['register_popup'].toggle();
       }
@@ -406,7 +400,8 @@
         }
       }
       registered() {
-        console.log('registrado');
+        // TODO Actions when is registered
+        this.log('registrado');
       }
       handleError(err){
         if (err.detail.code==='auth/operation-not-allowed') {
@@ -416,7 +411,7 @@
         }
         return false;
       }
-
+      // */
       login() {
         return this.$.auth[this.signInType]().then(this.signin.bind(this));
       }
@@ -427,28 +422,31 @@
 
       signin() {
         this.$.docfire.path = this.path;
-        //console.log('logged');
-        //console.log(this.data, this.path);
+        this.log('logged', this.data, this.path);
       }
 
       signout(){
         this.$.docfire.path = null;
         this._showError('none');
-        //console.log('log out');
+        this.log('log out');
       }      
 
-      savesimple(){
+      save(){
+        (this._arrKeys.length) ? this.saveComplex() : this.saveSimple();
+      }
+
+      saveSimple(){
         let el = this.root.querySelector('#'+this.path.replace('/',''));
         let val = el.$.input.value;
         if (val) {
           let nextId = parseInt(Object.keys(this.data).pop())+1;
           this.set('data.'+nextId, val);
-          console.log(nextId); console.dir(val);
+          this.log(nextId); this.log(val);
           this._showMsgPopup('Datos guardados correctamente', this._cleanFields.bind(this));
         }
       }
 
-      save(){
+      saveComplex(){ 
         let data = {};
         for(let i=0; i<this._arrKeys.length; i++) {
           let el = this.root.querySelector('#'+this._arrKeys[i]);
@@ -457,10 +455,8 @@
             if (val) {
               data[this._arrKeys[i]]=val;
             }
-            //console.log(this._arrKeys[i] + ' = ' + val);
           } else {
             let els = this.root.querySelectorAll('[id^=' + this._arrKeys[i] + '_]');
-            //console.log(this._arrKeys[i]);
             data[this._arrKeys[i]]=[];
             for(let j=0; j<els.length; j++) {
               let el = els[j];
@@ -468,7 +464,7 @@
               if(val) {
                 data[this._arrKeys[i]][j]=val;
               }
-              //console.log('\t' + j + ' = ' + val);
+              this.log('\t' + j + ' = ' + val);
             }
             if (data[this._arrKeys[i]].length===0) { delete data[this._arrKeys[i]]; }
           }
@@ -476,11 +472,10 @@
         if (Object.keys(data).length !== 0) {
           let nextId = parseInt(Object.keys(this.data).pop())+1;
           this.set('data.'+nextId, data);
-          console.log(nextId); console.dir(data);
+          this.log(nextId); this.log(data);
           this._showMsgPopup('Datos guardados correctamente', this._cleanFields.bind(this));
         }
       }
-
     }
 
     window.customElements.define(FirebaseFillform.is, FirebaseFillform);
