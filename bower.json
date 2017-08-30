@@ -12,10 +12,7 @@
     "paper-spinner": "polymerelements/paper-spinner#^2.0.0",
     "paper-dialog": "polymerelements/paper-dialog#^2.0.0",
     "paper-item": "polymerelements/paper-item#^2.0.0",
-    "paper-listbox": "polymerelements/paper-listbox#^2.0.0",
-    "neon-animation": "polymerelements/neon-animation#^2.0.1",
-    "paper-dialog-scrollable": "polymerelements/paper-dialog-scrollable#^2.1.0",
-    "paper-dropdown-menu-multi": "^0.2.0"
+    "paper-listbox": "polymerelements/paper-listbox#^2.0.0"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
