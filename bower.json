@@ -15,13 +15,13 @@
     "paper-listbox": "polymerelements/paper-listbox#^2.0.0",
     "neon-animation": "polymerelements/neon-animation#^2.0.1",
     "paper-dialog-scrollable": "polymerelements/paper-dialog-scrollable#^2.1.0",
-    "web-animations-js": "web-animations/web-animations-js#^2.3.1",
     "paper-dropdown-menu-multi": "^0.2.0"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",
-    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0"
+    "webcomponentsjs": "webcomponents/webcomponentsjs#^1.0.0",
+    "web-animations-js": "web-animations/web-animations-js#^2.3.1"
   },
   "resolutions": {
     "polymer": "^2.0.0",

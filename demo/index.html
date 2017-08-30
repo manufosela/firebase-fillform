@@ -11,6 +11,7 @@
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
     <link rel="import" href="../firebase-fillform.html">
+    <link rel="import" href="../../web-animations-js/web-animations-next.min.html">
 
     <custom-style>
       <style is="custom-style" include="demo-pages-shared-styles">
@@ -23,7 +24,8 @@
       <h4>Simple</h4>
       <demo-snippet>
         <template>
-          <firebase-fillform name='simple-example' path="/clasificacion" api-key="AIzaSyBaehmgaklz_vaqsBVZhvBm0fsD7PF8PHQ" domain="coleccion-peliculas"></firebase-fillform>
+          <firebase-fillform path="/categoria" api-key="AIzaSyBaehmgaklz_vaqsBVZhvBm0fsD7PF8PHQ" domain="coleccion-peliculas">      
+          </firebase-fillform>
         </template>
       </demo-snippet>
       <h3>Complex</h3>
