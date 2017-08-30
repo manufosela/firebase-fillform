@@ -43,6 +43,11 @@ Now the *clasification* field it is not a free field, it is shown like a select 
 
 https://github.com/manufosela/firebase-fillform
 
+# Dependencies
+
+* polymerfire
+* web-animations-js
+
 # Use
 <firebase-fillform path="/firebase_path" api-key="firebase_api_key" domain="firebase_domain"></firebase-fillform>
 
@@ -76,7 +81,7 @@ Configure Firebase:
 
 <h3>Basic firebase-fillform demo</h3>
 <h4>Simple</h4>
-<firebase-fillform name='simple-example' path="/clasificacion" api-key="AIzaSyBaehmgaklz_vaqsBVZhvBm0fsD7PF8PHQ" domain="coleccion-peliculas"></firebase-fillform>
+<firebase-fillform name='simple-example' path="/categoria" api-key="AIzaSyBaehmgaklz_vaqsBVZhvBm0fsD7PF8PHQ" domain="coleccion-peliculas"></firebase-fillform>
 <h3>Complex</h3>
 <firebase-fillform name='complex-example' path="/peliculas" debug="true"></firebase-fillform>
 </div>
